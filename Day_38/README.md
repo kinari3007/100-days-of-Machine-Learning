@@ -216,3 +216,83 @@ Way 2 → SimpleImputer(add_indicator=True)
   → imputes AND adds indicator in one step
   → cleaner and production ready ✅
 ```
+
+--- 
+---
+
+### 1. What is a Pipeline?
+```
+A Pipeline is a way to chain multiple preprocessing steps and a model together into one single object that can be fit, transformed, and evaluated in one go.
+
+Instead of doing imputation → scaling → encoding → model separately → Pipeline does ALL of it in the correct order automatically.
+```
+
+---
+
+### 2. Why Do We Need Pipelines?
+```
+Without Pipeline (manual, error-prone):
+  Step 1: impute X_train  → impute X_test
+  Step 2: scale X_train   → scale X_test
+  Step 3: encode X_train  → encode X_test
+  Step 4: fit model on X_train
+  Step 5: predict on X_test
+  
+  Problem:
+  → Easy to forget a step on test data
+  → Easy to fit transformers on test (data leakage)
+  → Hard to tune hyperparameters across all steps
+  → Messy code
+```
+---
+```
+With Pipeline (clean, safe):
+  pipeline.fit(X_train, y_train)    ← does ALL steps ✅
+  pipeline.predict(X_test)          ← applies ALL steps ✅
+  
+  Benefits:
+  → No data leakage (test never seen during fit)
+  → Clean readable code
+  → Easy hyperparameter tuning with GridSearchCV
+  → Production ready
+```
+
+---
+
+### 3. The Building Blocks
+
+Pipeline uses three main tools:
+```
+1. Pipeline
+   → chains steps in sequence
+   → step 1 output → step 2 input → step 3 input...
+```
+```
+2. ColumnTransformer
+   → applies DIFFERENT transformations to DIFFERENT columns
+   → numerical columns → one pipeline
+   → categorical columns → another pipeline
+```
+```
+3. GridSearchCV
+   → tries all combinations of hyperparameters
+   → finds the best combination
+   → works seamlessly with Pipeline
+```
+```
+4. This Pipeline's Architecture
+Raw Data (X_train)
+        ↓
+ColumnTransformer (preprocessor)
+  ├── Numerical columns [Age, Fare]
+  │     ├── SimpleImputer (median)   → fill NaN
+  │     └── StandardScaler           → scale to mean=0, std=1
+  │
+  └── Categorical columns [Embarked, Sex]
+        ├── SimpleImputer (most_frequent) → fill NaN with mode
+        └── OneHotEncoder                 → convert to 0/1 columns
+        ↓
+LogisticRegression (classifier)
+        ↓
+Predictions
+```
